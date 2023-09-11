@@ -1,7 +1,7 @@
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public class StudentService {
 
     private final StudentRepo repo = new StudentRepo();
