@@ -18,8 +18,17 @@ public class GuestList {
     private final List<String> guests;
 
     public GuestList() {
+        this(false);
+    }
+
+    public GuestList(boolean propagateExceptions) {
         guests = new ArrayList<>();
-        readFromFile();
+        readFromFile(propagateExceptions);
+    }
+
+    public void addGuest(String guest) {
+        guests.add(guest);
+        writetoFile();
     }
 
     public void setGuests(List<String> list) {
@@ -28,14 +37,18 @@ public class GuestList {
         writetoFile();
     }
 
-    private void readFromFile() {
+    private void readFromFile(boolean propagateExceptions) {
         Path path = Path.of(GUESTS_TXT);
-        try (Stream<String> stream = Files.lines(path); ) {
+        try (Stream<String> stream = Files.lines(path)) {
             guests.clear();
             guests.addAll(stream.toList());
-        } catch (NoSuchFileException ignored) {
+        } catch (NoSuchFileException e) {
+            if (propagateExceptions)
+                throw new RuntimeException("%s while reading \"%s\"".formatted(e.getClass().getSimpleName(), path.toAbsolutePath()), e);
         } catch (IOException e) {
             System.err.printf("%s while reading \"%s\": %s", e.getClass().getSimpleName(), path.toAbsolutePath(), e.getMessage());
+            if (propagateExceptions)
+                throw new RuntimeException("%s while reading \"%s\"".formatted(e.getClass().getSimpleName(), path.toAbsolutePath()), e);
         }
     }
 

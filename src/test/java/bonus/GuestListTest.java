@@ -86,10 +86,10 @@ class GuestListTest {
         assertTrue(file.isFile());
 
         List<String> actual = null;
-        try ( Stream<String> stream = Files.lines(file.toPath()); ) {
+        try ( Stream<String> stream = Files.lines(file.toPath())) {
             actual = stream.toList();
         } catch (IOException e) {
-            fail("Test[ shouldWriteToFileSystem ]: IOException while reading \"%s\"".formatted(file.getAbsolutePath()));
+            fail("Test[ shouldWriteToFileSystem ] -> %s while reading \"%s\": %s".formatted(e.getClass().getSimpleName(), file.getAbsolutePath(), e.getMessage()));
         }
 
         List<String> expected = List.of("Theodor","Anette");
@@ -112,7 +112,7 @@ class GuestListTest {
         try {
             Files.write(Path.of(GUESTS_TXT), List.of("Stephan","Max"), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            System.err.printf("Test[ shouldReadFromFileSystem ]: IOException while writing \"%s\": %s%n", GUESTS_TXT, e.getMessage());
+            System.err.printf("Test[ shouldReadFromFileSystem ] -> %s while writing \"%s\": %s%n", e.getClass().getSimpleName(), GUESTS_TXT, e.getMessage());
         }
         GuestList guestList = new GuestList();
 
@@ -127,9 +127,49 @@ class GuestListTest {
 
     }
 
+/*
+	•	Test 5:
+	⁃	Schreibe einen Test, der prüft, dass beim Lesen eine Exception auftritt, wenn die Datei nicht existiert
+*/
     @Test
-    public void test() {
+    public void shouldThowExceptionWhenFileNotExists() {
+        // Given
+        try {
+            Files.delete(Path.of(GUESTS_TXT));
+        } catch (IOException ignored) {
+        }
 
+        // When
+        // Then
+        assertThrows(RuntimeException.class, ()->new GuestList(true));
+    }
+
+/*
+	•	Test 6:
+	⁃	Füge eine addGuest-Methode hinzu, die als Parameter einen String guest erhält und diesen als zusätzliche Zeile in die Datei schreibt.
+*/
+    @Test
+    public void shouldAddLineInFileWhenAddGuest() {
+        // Given
+        GuestList guestList = new GuestList();
+        guestList.setGuests(List.of("Theodor","Anette"));
+
+        // When
+        guestList.addGuest("NextGuest");
+        List<String> actualStored = guestList.getGuests();
+        List<String> actualInFile = null;
+        Path path = Path.of(GUESTS_TXT);
+        try (Stream<String> stream = Files.lines(path)) {
+            actualInFile = stream.toList();
+        } catch (IOException e) {
+            // Then
+            fail("Test[ shouldAddLineInFileWhenAddGuest ] -> %s while reading \"%s\": %s".formatted(e.getClass().getSimpleName(), path.toAbsolutePath(), e.getMessage()));
+        }
+
+        // Then
+        List<String> expected = List.of("Theodor","Anette","NextGuest");
+        assertEquals(expected, actualStored);
+        assertEquals(expected, actualInFile);
     }
 
 }
